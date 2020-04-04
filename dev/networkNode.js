@@ -128,6 +128,19 @@ app.post('/register-node', function(req, res) {
 
 app.post('/register-nodes-bulk', function(req, res) {
     // For recieving all the url of the nodes present in the network and completing the process of adding this new node to the network
+
+    // get all the networkNodesUrl sent in through the request
+    const allNetworkNodes = req.body.allNetworkNodes;
+    allNetworkNodes.forEach(networkNodeUrl => {
+        const nodeNotAlreadyPresent = medixCoin.indexOf(networkNodeUrl) == -1;
+        const notOwnUrl = medixCoin.currentNodeUrl !== networkNodeUrl;
+
+        if(nodeNotAlreadyPresent && notOwnUrl)
+            medixCoin.networkNodes.push(newNodeUrl);
+        
+        // Return a success message
+        res.json({note: 'Bulk registration successful'});
+    })
 });
  
 app.listen(port, function () {
