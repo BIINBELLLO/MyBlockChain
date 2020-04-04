@@ -65,6 +65,18 @@ app.get('/mine', function (req, res) {
         block: newBlock
     });
 });
+
+app.post('/register-and-broadcast-node', function() {
+    // Registering a new network node on any node already in the network and broadcasting that new node's url to all the other nodes present in the network
+});
+
+app.post('/register-node', function() {
+    // For recieving and registering any broadcasted node url on own network
+});
+
+app.post('/register-nodes-bulk', function() {
+    // For recieving all the url of the nodes present in the network and completing the process of adding this new node to the network
+});
  
 app.listen(port, function () {
     console.log(`Started and Listening on http://localhost:${port}`);
