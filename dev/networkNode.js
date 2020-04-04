@@ -69,10 +69,18 @@ app.get('/mine', function (req, res) {
 
 app.post('/register-and-broadcast-node', function(req, res) {
     // Registering a new network node on any node already in the network and broadcasting that new node's url to all the other nodes present in the network
+
+    // get the newNodeUrl that needs to be registered
     const newNodeUrl = req.body.newNodeUrl;
+
+    // Create an empty array that will hold all the promise that will be returned when registering the newNodeUrl on other nodes
     const regNodesPromises = [];
+
+    // Check if node is not already in this node networkNodes then add it to it
+
     if(medixCoin.networkNodes.indexOf(newNodeUrl) === -1) 
         medixCoin.networkNodes.push(newNodeUrl);
+    // Now loop through all the urls in the networkNodes array and send a request to them to register this newNodeUrl in their networkNodes array
     medixCoin.networkNodes.forEach(networkNodeUrl => {
         // broadcast the new node url to this url
         const requestOptions = {
@@ -84,6 +92,8 @@ app.post('/register-and-broadcast-node', function(req, res) {
 
         regNodesPromises.push(rp(requestOptions));
     });
+
+    // Get all the promises back, then send a request to the register-nodes-bulk endpoint of the newNodeUrl so it can also register all the other nodesUrls to it's own networkNodes array
 
     Promise.all(regNodesPromises)
         .then(data => {
@@ -102,6 +112,18 @@ app.post('/register-and-broadcast-node', function(req, res) {
 
 app.post('/register-node', function(req, res) {
     // For recieving and registering any broadcasted node url on own network
+    // get the newNodeUrl and check whether it already is in this nodes networkNodes array and also check if it is not the currentNode's url.
+    const newNodeUrl = req.body.newNodeUrl;
+    const nodeNotAlreadyPresent = medixCoin.indexOf(newNodeUrl) == -1;
+    const notOwnUrl = medixCoin.currentNodeUrl !== newNodeUrl;
+
+    // Add the newNodeUrl to the networkNodes array if all the checks are passed
+    if(nodeNotAlreadyPresent && notOwnUrl)
+        medixCoin.networkNodes.push(newNodeUrl);
+    
+    // Return a success message
+    res.json({note: 'New node registered successfully'});
+
 });
 
 app.post('/register-nodes-bulk', function(req, res) {
