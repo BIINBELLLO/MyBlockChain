@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const Blockchain = require('./blockchain');
 const uuid = require('uuid/v1');
 const port = process.argv[2];
+const rp = require('request-promise');
 
 const medixCoin = new Blockchain();
 const nodeAddress = uuid().split('-').join('');
@@ -66,15 +67,44 @@ app.get('/mine', function (req, res) {
     });
 });
 
-app.post('/register-and-broadcast-node', function() {
+app.post('/register-and-broadcast-node', function(req, res) {
     // Registering a new network node on any node already in the network and broadcasting that new node's url to all the other nodes present in the network
+    const newNodeUrl = req.body.newNodeUrl;
+    const regNodesPromises = [];
+    if(medixCoin.networkNodes.indexOf(newNodeUrl) === -1) 
+        medixCoin.networkNodes.push(newNodeUrl);
+    medixCoin.networkNodes.forEach(networkNodeUrl => {
+        // broadcast the new node url to this url
+        const requestOptions = {
+            uri: networkNodeUrl + '/register-node',
+            method: 'POST',
+            body: { newNodeUrl: newNodeUrl},
+            json: true
+        };
+
+        regNodesPromises.push(rp(requestOptions));
+    });
+
+    Promise.all(regNodesPromises)
+        .then(data => {
+            const bulkRegisterOptions = {
+                uri: newNodeUrl + '/register-nodes-bulk',
+                method: 'POST',
+                body: { allNetworkNodes: [...medixCoin.networkNodes, medixCoin.currentNodeUrl]},
+                json: true
+            };
+
+            return rp(bulkRegisterOptions);
+        }).then(data => {
+            res.json({ note: 'New node registered in the network successfully'});
+        });
 });
 
-app.post('/register-node', function() {
+app.post('/register-node', function(req, res) {
     // For recieving and registering any broadcasted node url on own network
 });
 
-app.post('/register-nodes-bulk', function() {
+app.post('/register-nodes-bulk', function(req, res) {
     // For recieving all the url of the nodes present in the network and completing the process of adding this new node to the network
 });
  
