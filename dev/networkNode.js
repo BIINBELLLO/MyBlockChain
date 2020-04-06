@@ -5,9 +5,10 @@ const Blockchain = require('./blockchain');
 const uuid = require('uuid/v1');
 const port = process.argv[2];
 const rp = require('request-promise');
+const nodeAddress = uuid().split('-').join('');
 
 const medixCoin = new Blockchain();
-const nodeAddress = uuid().split('-').join('');
+
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
@@ -114,7 +115,7 @@ app.post('/register-node', function(req, res) {
     // For recieving and registering any broadcasted node url on own network
     // get the newNodeUrl and check whether it already is in this nodes networkNodes array and also check if it is not the currentNode's url.
     const newNodeUrl = req.body.newNodeUrl;
-    const nodeNotAlreadyPresent = medixCoin.indexOf(newNodeUrl) == -1;
+    const nodeNotAlreadyPresent = medixCoin.networkNodes.indexOf(newNodeUrl) == -1;
     const notOwnUrl = medixCoin.currentNodeUrl !== newNodeUrl;
 
     // Add the newNodeUrl to the networkNodes array if all the checks are passed
@@ -122,7 +123,8 @@ app.post('/register-node', function(req, res) {
         medixCoin.networkNodes.push(newNodeUrl);
     
     // Return a success message
-    res.json({note: 'New node registered successfully'});
+    res.status(200).send();
+    // res.json({note: 'New node registered successfully'});
 
 });
 
@@ -132,14 +134,16 @@ app.post('/register-nodes-bulk', function(req, res) {
     // get all the networkNodesUrl sent in through the request
     const allNetworkNodes = req.body.allNetworkNodes;
     allNetworkNodes.forEach(networkNodeUrl => {
-        const nodeNotAlreadyPresent = medixCoin.indexOf(networkNodeUrl) == -1;
+        const nodeNotAlreadyPresent = medixCoin.networkNodes.indexOf(networkNodeUrl) == -1;
         const notOwnUrl = medixCoin.currentNodeUrl !== networkNodeUrl;
 
+
         if(nodeNotAlreadyPresent && notOwnUrl)
-            medixCoin.networkNodes.push(newNodeUrl);
+            medixCoin.networkNodes.push(networkNodeUrl);
         
         // Return a success message
-        res.json({note: 'Bulk registration successful'});
+        // res.json({note: 'Bulk registration successful'});
+        res.status(200).send();
     })
 });
  
